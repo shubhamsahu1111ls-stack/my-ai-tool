@@ -1,50 +1,47 @@
 import streamlit as st
-import google.generativeai as genai
+import requests
+import json
 
-# Page Configuration
 st.set_page_config(page_title="Viral Script Doctor 🚀", layout="centered")
-
-# UI Design
-st.markdown("""
-    <style>
-    .stButton>button { width: 100%; border-radius: 10px; background-color: #FF4B4B; color: white; font-weight: bold; }
-    </style>
-    """, unsafe_allow_html=True)
 
 st.title("🚀 Viral Script Doctor")
 st.write("Ab aapka har idea banega Viral!")
 
-# Setup API Key & Model
+# Secrets se API Key lena
 try:
-    # 1. API Key fetch karna
     API_KEY = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=API_KEY)
-    
-    # 2. Stable model call (Humne yahan model name simple rakha hai)
-    # Isse v1beta ka error khatam ho jayega
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    
-except Exception as e:
-    st.error("Secrets setup mein problem hai. Please check karein!")
+except:
+    st.error("API Key nahi mili! Check Streamlit Secrets.")
 
 user_idea = st.text_area("Aapka video topic kya hai?", placeholder="e.g. 5 Secret facts about Spices")
 
 if st.button("Magic Karein! ✨"):
     if user_idea:
         with st.spinner('AI Dimag laga raha hai...'):
+            # Direct API URL (Stable Version)
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+            
+            headers = {'Content-Type': 'application/json'}
+            
+            data = {
+                "contents": [{
+                    "parts": [{"text": f"You are a Viral Content Strategist. For the idea '{user_idea}', provide 3 Killer Hooks, 1 Viral Title, and a Thumbnail idea in Hinglish."}]
+                }]
+            }
+
             try:
-                # Prompt for Viral Content
-                prompt = f"You are a Viral Content Strategist. For the idea '{user_idea}', provide 3 Killer Hooks, 1 Viral Title, and a Thumbnail idea in Hinglish."
+                response = requests.post(url, headers=headers, data=json.dumps(data))
+                result = response.json()
                 
-                # Request generating content
-                response = model.generate_content(prompt)
-                
-                st.success("Aapka Viral Plan Taiyaar Hai!")
-                st.markdown(response.text)
-                
+                # Result ko display karna
+                if 'candidates' in result:
+                    output_text = result['candidates'][0]['content']['parts'][0]['text']
+                    st.success("Aapka Viral Plan Taiyaar Hai!")
+                    st.markdown(output_text)
+                else:
+                    st.error(f"Google Response Error: {result}")
+                    
             except Exception as e:
-                # Agar quota ya koi aur error aaye toh yahan dikhega
-                st.error(f"Error: {e}")
+                st.error(f"Connection Error: {e}")
     else:
         st.warning("Pehle kuch topic toh likhiye!")
-    
