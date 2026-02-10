@@ -8,7 +8,8 @@ st.title("🚀 Viral Script Doctor")
 st.subheader("Apne boring idea ko Viral Content mein badle!")
 
 # User se API Key aur Idea lena
-api_key = st.text_input("Apni Gemini API Key yahan paste karein:", type="password")
+# Ab hum user se key nahi mangenge, seedha system se uthayenge
+api_key = st.secrets["GEMINI_API_KEY"]
 user_idea = st.text_area("Aapka video topic kya hai? (Eg: How to grow potatoes at home)")
 
 if st.button("Magic Karein! ✨"):
