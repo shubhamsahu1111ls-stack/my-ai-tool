@@ -1,45 +1,45 @@
 import streamlit as st
 from google import genai
 
-# Page ki setting
 st.set_page_config(page_title="Viral Script Doctor 🚀", layout="centered")
 
-st.title("🚀 Viral Script Doctor")
-st.subheader("Apne boring idea ko Viral Content mein badle!")
+# Design
+st.markdown("""
+    <style>
+    .stButton>button { width: 100%; border-radius: 10px; background-color: #FF4B4B; color: white; font-weight: bold; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# User se API Key aur Idea lena
-# Ab hum user se key nahi mangenge, seedha system se uthayenge
-api_key = st.secrets["GEMINI_API_KEY"]
-user_idea = st.text_area("Aapka video topic kya hai? (Eg: How to grow potatoes at home)")
+st.title("🚀 Viral Script Doctor")
+st.write("Apne idea ko 10M views layak banayein!")
+
+# Secrets se API Key lena
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+    client = genai.Client(api_key=api_key)
+except Exception:
+    st.error("Pehle Streamlit Secrets mein API Key set karein!")
+
+user_idea = st.text_area("Aapka video topic kya hai?", placeholder="e.g. Asli Kitchen King masala ki pehchan")
 
 if st.button("Magic Karein! ✨"):
-    if not api_key or not user_idea:
-        st.error("Please dono cheezein bhariye!")
+    if user_idea:
+        with st.spinner('AI Dimag laga raha hai...'):
+            try:
+                prompt = f"You are a Viral Content Strategist. For the idea '{user_idea}', provide 3 Killer Hooks, 1 Viral Title, and a Thumbnail idea in Hinglish."
+                
+                # FIX: Model ka naam bina 'models/' ke likhein
+                response = client.models.generate_content(
+                    model="gemini-1.5-flash", 
+                    contents=prompt
+                )
+                
+                st.success("Aapka Viral Plan Taiyaar Hai!")
+                st.markdown(response.text)
+                
+            except Exception as e:
+                # Agar abhi bhi error aaye toh user ko sahi jaankari mile
+                st.error(f"Error: {e}")
     else:
-        try:
-            client = genai.Client(api_key=api_key)
-            
-            # Ye hai wo unique prompt jo ise viral banayega
-            prompt = f"""
-            You are a Viral Content Strategist. The user has this idea: {user_idea}.
-            Please provide:
-            1. A 'Killer Hook' (First 3 seconds of the video).
-            2. A viral Title idea.
-            3. A Thumbnail concept that gets 20% CTR.
-            4. 3 Keywords to rank on YouTube.
-            Write the response in Hinglish.
-            """
-            
-            response = client.models.generate_content(
-                model="gemini-1.5-flash", 
-                contents=prompt
-            )
-            
-            st.success("Aapka Viral Plan Taiyaar Hai!")
-            st.markdown(response.text)
-            
-        except Exception as e:
-            st.error(f"Kuch galat hua: {e}")
-
-st.divider()
-st.info("Tip: Ise viral karne ke liye iska link apne WhatsApp status par lagayein!")
+        st.warning("Pehle kuch topic toh likhiye!")
+                
